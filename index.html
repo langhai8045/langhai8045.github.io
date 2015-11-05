@@ -1,21 +1,156 @@
 <!DOCTYPE html>
-<html>
-<head>
-	<script type="text/javascript" src="js/jquery172min.js"></script>
-	<script type="text/javascript">
-		$(document).ready(function() {
-			$.ajax({
-				type:"get",
-				url:"http://52.24.173.113",
-				success:function(data) {
-					$("#content").html(data);
-				}
-			});
-		});
-	</script>
-</head>
-<body>
-<div id="content"></div>
-</body>
-</html>
+<html lang="en">
 
+	<head>
+		<meta charset="utf-8">
+		<!-- 新 Bootstrap 核心 CSS 文件 -->
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<title>Demo</title>
+
+	</head>
+
+	<body>
+		<div class="form-horizontal">
+			<div class="control-group">
+				<label class="control-label" for="inputUnixTime">当前UNIX时间戳</label>
+				<div class="controls">
+					<label id="inputUnixTime"></label>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="inputUrl">URL</label>
+				<div class="controls">
+					<input type="text" id="inputUrl" name="inputUrl" value="http://7xnvt3.com1.z0.glb.clouddn.com" class="input-xxlarge" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="inputKey">文件存储KEY</label>
+				<div class="controls">
+					<input type="text" id="inputKey" class="input-xxlarge" value="test.jpg" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="inputAccessKey">AccessKey</label>
+				<div class="controls">
+					<input type="text" id="inputAccessKey" placeholder="访问KEY" class="input-xxlarge" value="hU1Z_lyHd3XSk-tBT_jFEK29-_RhnTIlQ2mJAmGh" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="inputSecretKey">SecretKey</label>
+				<div class="controls">
+					<input type="text" id="inputSecretKey" placeholder="加密KEY" class="input-xxlarge" value="aXsPfirecDv6B6aGtXx861PfrPFmZm63IjnU0P8i" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="inputStepTime">有效时间(分)</label>
+				<div class="controls">
+					<input type="text" id="inputStepTime" placeholder="有效时间(分)" class="input-xxlarge" value="1" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="outputEncrypt">加密结果</label>
+				<div class="controls">
+					<input type="text" id="outputEncrypt" class="input-xxlarge" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="outputDownloadUrl">下载地址</label>
+				<div class="controls">
+					<input type="text" id="outputDownloadUrl" class="input-xxlarge" />
+				</div>
+			</div>
+
+			<div class="control-group">
+				<div class="controls">
+					<button type="button" id="encryptBtn" class="btn btn-info">加密</button>
+					<button type="button" id="getDownloadUrlBtn" class="btn btn-info">取得下载地址</button>
+				</div>
+			</div>
+
+			<div class="control-group">
+				<div class="controls">
+					<img id="outputImg" />
+				</div>
+			</div>
+
+		</div>
+	</body>
+	<!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
+	<script src="js/jquery.js"></script>
+	<!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/aes/common/core-min.js"></script>
+	<script src="js/aes/hash/hmac-sha1.js"></script>
+	<script type="text/javascript" src="js/base64/base64.js"></script>
+
+	<script type="text/javascript">
+		$(function() {
+			setInterval(setUnixTime, 1000);
+			$("#encryptBtn").click(function() {
+				$("#outputEncrypt").val(encrypt($("#inputUrl").val() + "/" + $("#inputKey").val() + "?e=" + getUnixTime(), $("#inputSecretKey").val()));
+			});
+			$("#getDownloadUrlBtn").click(function() {
+				$("#outputDownloadUrl").val(getDownloadUrl());
+				$("#outputImg").attr("src", $("#outputDownloadUrl").val());
+			});
+			alert(encrypt("http://7xnvt3.com1.z0.glb.clouddn.com/test.jpg?e=1446435176", "aXsPfirecDv6B6aGtXx861PfrPFmZm63IjnU0P8i"));
+		});
+
+		function setUnixTime() {
+			$("#inputUnixTime").html(Math.round(new Date().getTime() / 1000));
+		}
+
+		function getUnixTime() {
+				var currentDate = new Date();
+				return Math.round((addMinutes(currentDate, $("#inputStepTime").val()).getTime()) / 1000);
+			}
+			//计算后n分钟的时间
+
+		function addMinutes(date, minutes) {
+			minutes = parseInt(minutes);
+			var interTimes = minutes * 60 * 1000;
+			interTimes = parseInt(interTimes);
+			return new Date(Date.parse(date) + interTimes);
+		}
+
+		function encrypt(val, key) {
+			val = encodeUTF8(val);
+			var result = base64encode(CryptoJS.HmacSHA1(val, key) + "");
+			return result;
+		}
+
+		function encodeUTF8(str) {
+			var temp = "",
+				rs = "";
+			for (var i = 0, len = str.length; i < len; i++) {
+				temp = str.charCodeAt(i).toString(16);
+				rs += "\\u" + new Array(5 - temp.length).join("0") + temp;
+			}
+			return rs;
+		}
+
+		function getDownloadUrl() {
+			var unixTime = getUnixTime();
+			var downlaodUrl = $("#inputUrl").val() + "/" + $("#inputKey").val() + "?e=" + unixTime;
+			var paramJson = {
+				"e": unixTime,
+				"token": $("#inputAccessKey").val() + ":" + encrypt(downlaodUrl, $("#inputSecretKey").val())
+			};
+			return geneUrl($("#inputUrl").val() + "/" + $("#inputKey").val(), paramJson);
+		}
+
+		function geneUrl(url, params) {
+			if (url.indexOf("?") < 0) {
+				url = url + "?";
+			}
+			for (var param in params) {
+				url = url + param + "=" + params[param] + "&";
+			}
+			if (params) {
+				url = url.substr(0, url.length - 1);
+			}
+			return url;
+		}
+	</script>
+
+</html>
