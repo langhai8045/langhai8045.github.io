@@ -6,9 +6,9 @@
 		$(document).ready(function() {
 			$.ajax({
 				type:"get",
-				url:"http://211.95.66.12:10080/wogame/getNoticeDetail.do?jsondata={'id':1}",
+				url:"http://52.24.173.113",
 				success:function(data) {
-					$("#content").html(data.data.content);
+					$("#content").html(data);
 				}
 			});
 		});
